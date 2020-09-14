@@ -1,5 +1,4 @@
 #pragma once
-#include <xtr1common>
 #include <cstddef>
 #include <iterator>
 
@@ -20,9 +19,7 @@ namespace intrusive {
     class list_element {
     public:
         friend class list<list_element<Tag>, Tag>;
-
         friend class Iterator<list_element<Tag>, Tag>;
-
         friend class Iterator<const list_element<Tag>, Tag>;
 
         list_element() noexcept: next(this), prev(this) {}
@@ -40,6 +37,8 @@ namespace intrusive {
                 Link(this, this);
         }
 
+        list_element *next;
+        list_element *prev;
 
         void unlink() {
             if (next != nullptr)
@@ -51,9 +50,6 @@ namespace intrusive {
 
         bool isLinked() const { return next != this; }
 
-        list_element *next;
-        list_element *prev;
-
         static void Link(list_element *u, list_element *v) {
             u->next = v;
             v->prev = u;
@@ -63,7 +59,9 @@ namespace intrusive {
     template<typename Type, typename Tag>
     class Iterator {
     public:
-        friend class list<Type, Tag>;
+        friend class list<std::remove_const_t<Type>, Tag>;
+        friend class Iterator<std::remove_const_t<Type>, Tag>;
+        friend class Iterator<std::add_const_t<Type>, Tag>;
 
         using iterator_category = std::bidirectional_iterator_tag;
         using value_type = std::remove_const_t<Type>;
@@ -137,16 +135,17 @@ namespace intrusive {
             return *static_cast<Type *>(node);
         }
 
+    private:
         Node *node;
-
         explicit Iterator(Node *node) : node(node) {}
     };
 
     template<typename Type, typename Tag=tag_default>
     class list {
+        friend class Iterator<std::remove_const_t<Type>, Tag>;
+        friend class Iterator<std::add_const_t<Type>, Tag>;
+
     public:
-        friend class Iterator<Type, Tag>;
-        friend class Iterator<const Type, Tag>;
 
         using iterator = Iterator<Type, Tag>;
         using const_iterator = Iterator<const Type, Tag>;
@@ -156,7 +155,9 @@ namespace intrusive {
 
         list() noexcept = default;
 
-        list(list&& l) noexcept = default;
+        list(list&& l) noexcept {
+            this->splice(end(), l, l.begin(), l.end());
+        };
 
         list(const list &) = delete;
 
@@ -246,7 +247,7 @@ namespace intrusive {
 
         void clear() {
             while (!empty()) {
-                head.next->unlink();
+                pop_back();
             }
         }
 
