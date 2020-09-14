@@ -41,11 +41,11 @@ namespace intrusive {
         list_element *prev;
 
         void unlink() {
-            if (next != nullptr)
+            if (next != this)
                 next->prev = prev;
-            if (prev != nullptr)
+            if (prev != this)
                 prev->next = next;
-            prev = next = nullptr;
+            prev = next = this;
         }
 
         bool isLinked() const { return next != this; }
