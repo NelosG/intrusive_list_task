@@ -13,6 +13,7 @@ namespace intrusive {
     template<typename Type, typename Tag>
     class Iterator;
 
+
     struct tag_default;
 
     template<typename Tag=tag_default>
@@ -73,6 +74,8 @@ namespace intrusive {
         using Node = list_element<Tag>;
 
         Iterator() noexcept = default;
+
+        explicit Iterator(Node *node) : node(node) {}
 
         Iterator &operator+=(int k) noexcept {
             if(k < 0) operator-=(-k);
@@ -137,7 +140,6 @@ namespace intrusive {
 
     private:
         Node *node;
-        explicit Iterator(Node *node) : node(node) {}
     };
 
     template<typename Type, typename Tag=tag_default>
